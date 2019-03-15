@@ -1,0 +1,1449 @@
+<ns0:test-suite xmlns:ns0="urn:model.allure.qatools.yandex.ru" start="1541165065579" stop="1541165068469">
+  <name>test_login</name>
+  <labels/>
+  <test-cases>
+    <test-case start="1541165065579" status="broken" stop="1541165067391">
+      <name>TestLogin.test_login[18610453007-123456-itheima-None]</name>
+      <failure>
+        <message>URLError: &lt;urlopen error [WinError 10061] 由于目标计算机积极拒绝，无法连接。&gt;</message>
+        <stack-trace>self = &lt;urllib.request.HTTPHandler object at 0x0000022646ED6F60&gt;, http_class = &lt;class 'http.client.HTTPConnection'&gt;
+req = &lt;selenium.webdriver.remote.remote_connection.Request object at 0x000002264669CD68&gt;, http_conn_args = {}
+host = '127.0.0.1:4723', h = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update(dict((k, v) for k, v in req.headers.items()
+                            if k not in headers))
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = dict((name.title(), val) for name, val in headers.items())
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+                h.request(req.get_method(), req.selector, req.data, headers,
+&gt;                         encode_chunked=req.has_header('Transfer-encoding'))
+
+e:\python\lib\urllib\request.py:1318: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;, method = 'POST', url = '/wd/hub/session'
+body = b'{"desiredCapabilities": {"platformName": "Android", "platformVersion": "5.1", "deviceName": "192.168.56.101:5555", "... "resetKeyboard": true, "appPackage": "com.yunmall.lc", "appActivity": "com.yunmall.ymctoc.ui.activity.MainActivity"}}'
+headers = {'Accept': 'application/json', 'Connection': 'close', 'Content-Length': '291', 'Content-Type': 'application/json;charset=UTF-8', ...}
+
+    def request(self, method, url, body=None, headers={}, *,
+                encode_chunked=False):
+        """Send a complete request to the server."""
+&gt;       self._send_request(method, url, body, headers, encode_chunked)
+
+e:\python\lib\http\client.py:1239: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;, method = 'POST', url = '/wd/hub/session'
+body = b'{"desiredCapabilities": {"platformName": "Android", "platformVersion": "5.1", "deviceName": "192.168.56.101:5555", "... "resetKeyboard": true, "appPackage": "com.yunmall.lc", "appActivity": "com.yunmall.ymctoc.ui.activity.MainActivity"}}'
+headers = {'Accept': 'application/json', 'Connection': 'close', 'Content-Length': '291', 'Content-Type': 'application/json;charset=UTF-8', ...}
+encode_chunked = False
+
+    def _send_request(self, method, url, body, headers, encode_chunked):
+        # Honor explicitly requested Host: and Accept-Encoding: headers.
+        header_names = frozenset(k.lower() for k in headers)
+        skips = {}
+        if 'host' in header_names:
+            skips['skip_host'] = 1
+        if 'accept-encoding' in header_names:
+            skips['skip_accept_encoding'] = 1
+    
+        self.putrequest(method, url, **skips)
+    
+        # chunked encoding will happen if HTTP/1.1 is used and either
+        # the caller passes encode_chunked=True or the following
+        # conditions hold:
+        # 1. content-length has not been explicitly set
+        # 2. the body is a file or iterable, but not a str or bytes-like
+        # 3. Transfer-Encoding has NOT been explicitly set by the caller
+    
+        if 'content-length' not in header_names:
+            # only chunk body if not explicitly set for backwards
+            # compatibility, assuming the client code is already handling the
+            # chunking
+            if 'transfer-encoding' not in header_names:
+                # if content-length cannot be automatically determined, fall
+                # back to chunked encoding
+                encode_chunked = False
+                content_length = self._get_content_length(body, method)
+                if content_length is None:
+                    if body is not None:
+                        if self.debuglevel &gt; 0:
+                            print('Unable to determine size of %r' % body)
+                        encode_chunked = True
+                        self.putheader('Transfer-Encoding', 'chunked')
+                else:
+                    self.putheader('Content-Length', str(content_length))
+        else:
+            encode_chunked = False
+    
+        for hdr, value in headers.items():
+            self.putheader(hdr, value)
+        if isinstance(body, str):
+            # RFC 2616 Section 3.7.1 says that text default has a
+            # default charset of iso-8859-1.
+            body = _encode(body, 'body')
+&gt;       self.endheaders(body, encode_chunked=encode_chunked)
+
+e:\python\lib\http\client.py:1285: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+message_body = b'{"desiredCapabilities": {"platformName": "Android", "platformVersion": "5.1", "deviceName": "192.168.56.101:5555", "... "resetKeyboard": true, "appPackage": "com.yunmall.lc", "appActivity": "com.yunmall.ymctoc.ui.activity.MainActivity"}}'
+
+    def endheaders(self, message_body=None, *, encode_chunked=False):
+        """Indicate that the last header line has been sent to the server.
+    
+        This method sends the request to the server.  The optional message_body
+        argument can be used to pass a message body associated with the
+        request.
+        """
+        if self.__state == _CS_REQ_STARTED:
+            self.__state = _CS_REQ_SENT
+        else:
+            raise CannotSendHeader()
+&gt;       self._send_output(message_body, encode_chunked=encode_chunked)
+
+e:\python\lib\http\client.py:1234: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+message_body = b'{"desiredCapabilities": {"platformName": "Android", "platformVersion": "5.1", "deviceName": "192.168.56.101:5555", "... "resetKeyboard": true, "appPackage": "com.yunmall.lc", "appActivity": "com.yunmall.ymctoc.ui.activity.MainActivity"}}'
+encode_chunked = False
+
+    def _send_output(self, message_body=None, encode_chunked=False):
+        """Send the currently buffered request and clear the buffer.
+    
+        Appends an extra \\r\\n to the buffer.
+        A message_body may be specified, to be appended to the request.
+        """
+        self._buffer.extend((b"", b""))
+        msg = b"\r\n".join(self._buffer)
+        del self._buffer[:]
+&gt;       self.send(msg)
+
+e:\python\lib\http\client.py:1026: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+data = b'POST /wd/hub/session HTTP/1.1\r\nAccept-Encoding: identity\r\nContent-Length: 291\r\nHost: 127.0.0.1:4723\r\nUser-Ag...on-urllib/3.6\r\nAccept: application/json\r\nContent-Type: application/json;charset=UTF-8\r\nConnection: close\r\n\r\n'
+
+    def send(self, data):
+        """Send `data' to the server.
+        ``data`` can be a string object, a bytes object, an array object, a
+        file-like object that supports a .read() method, or an iterable object.
+        """
+    
+        if self.sock is None:
+            if self.auto_open:
+&gt;               self.connect()
+
+e:\python\lib\http\client.py:964: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+
+    def connect(self):
+        """Connect to the host and port specified in __init__."""
+        self.sock = self._create_connection(
+&gt;           (self.host,self.port), self.timeout, self.source_address)
+
+e:\python\lib\http\client.py:936: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+address = ('127.0.0.1', 4723), timeout = &lt;object object at 0x000002264335B540&gt;, source_address = None
+
+    def create_connection(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
+                          source_address=None):
+        """Connect to *address* and return the socket object.
+    
+        Convenience function.  Connect to *address* (a 2-tuple ``(host,
+        port)``) and return the socket object.  Passing the optional
+        *timeout* parameter will set the timeout on the socket instance
+        before attempting to connect.  If no *timeout* is supplied, the
+        global default timeout setting returned by :func:`getdefaulttimeout`
+        is used.  If *source_address* is set it must be a tuple of (host, port)
+        for the socket to bind as a source address before making the connection.
+        A host of '' or port 0 tells the OS to use the default.
+        """
+    
+        host, port = address
+        err = None
+        for res in getaddrinfo(host, port, 0, SOCK_STREAM):
+            af, socktype, proto, canonname, sa = res
+            sock = None
+            try:
+                sock = socket(af, socktype, proto)
+                if timeout is not _GLOBAL_DEFAULT_TIMEOUT:
+                    sock.settimeout(timeout)
+                if source_address:
+                    sock.bind(source_address)
+                sock.connect(sa)
+                # Break explicitly a reference cycle
+                err = None
+                return sock
+    
+            except error as _:
+                err = _
+                if sock is not None:
+                    sock.close()
+    
+        if err is not None:
+&gt;           raise err
+
+e:\python\lib\socket.py:724: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+address = ('127.0.0.1', 4723), timeout = &lt;object object at 0x000002264335B540&gt;, source_address = None
+
+    def create_connection(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
+                          source_address=None):
+        """Connect to *address* and return the socket object.
+    
+        Convenience function.  Connect to *address* (a 2-tuple ``(host,
+        port)``) and return the socket object.  Passing the optional
+        *timeout* parameter will set the timeout on the socket instance
+        before attempting to connect.  If no *timeout* is supplied, the
+        global default timeout setting returned by :func:`getdefaulttimeout`
+        is used.  If *source_address* is set it must be a tuple of (host, port)
+        for the socket to bind as a source address before making the connection.
+        A host of '' or port 0 tells the OS to use the default.
+        """
+    
+        host, port = address
+        err = None
+        for res in getaddrinfo(host, port, 0, SOCK_STREAM):
+            af, socktype, proto, canonname, sa = res
+            sock = None
+            try:
+                sock = socket(af, socktype, proto)
+                if timeout is not _GLOBAL_DEFAULT_TIMEOUT:
+                    sock.settimeout(timeout)
+                if source_address:
+                    sock.bind(source_address)
+&gt;               sock.connect(sa)
+E               ConnectionRefusedError: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+e:\python\lib\socket.py:713: ConnectionRefusedError
+
+During handling of the above exception, another exception occurred:
+
+self = &lt;class 'test_login.TestLogin'&gt;
+
+    @allure.step("开始执行")
+    def setup_class(self):
+        # 实例化 统一入口类
+&gt;       self.page = PageIn()
+
+Scripts\test_login.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+Page\page_in.py:15: in __init__
+    self.driver=get_driver()
+Base\get_driver.py:18: in get_driver
+    return webdriver.Remote('http://127.0.0.1:4723/wd/hub', desired_caps)
+e:\python\lib\site-packages\appium\webdriver\webdriver.py:36: in __init__
+    super(WebDriver, self).__init__(command_executor, desired_capabilities, browser_profile, proxy, keep_alive)
+e:\python\lib\site-packages\selenium\webdriver\remote\webdriver.py:87: in __init__
+    self.start_session(desired_capabilities, browser_profile)
+e:\python\lib\site-packages\selenium\webdriver\remote\webdriver.py:141: in start_session
+    'desiredCapabilities': desired_capabilities,
+e:\python\lib\site-packages\selenium\webdriver\remote\webdriver.py:199: in execute
+    response = self.command_executor.execute(driver_command, params)
+e:\python\lib\site-packages\selenium\webdriver\remote\remote_connection.py:395: in execute
+    return self._request(command_info[0], url, body=data)
+e:\python\lib\site-packages\selenium\webdriver\remote\remote_connection.py:463: in _request
+    resp = opener.open(request, timeout=self._timeout)
+e:\python\lib\urllib\request.py:526: in open
+    response = self._open(req, data)
+e:\python\lib\urllib\request.py:544: in _open
+    '_open', req)
+e:\python\lib\urllib\request.py:504: in _call_chain
+    result = func(*args)
+e:\python\lib\urllib\request.py:1346: in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;urllib.request.HTTPHandler object at 0x0000022646ED6F60&gt;, http_class = &lt;class 'http.client.HTTPConnection'&gt;
+req = &lt;selenium.webdriver.remote.remote_connection.Request object at 0x000002264669CD68&gt;, http_conn_args = {}
+host = '127.0.0.1:4723', h = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update(dict((k, v) for k, v in req.headers.items()
+                            if k not in headers))
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = dict((name.title(), val) for name, val in headers.items())
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+                h.request(req.get_method(), req.selector, req.data, headers,
+                          encode_chunked=req.has_header('Transfer-encoding'))
+            except OSError as err: # timeout error
+&gt;               raise URLError(err)
+E               urllib.error.URLError: &lt;urlopen error [WinError 10061] 由于目标计算机积极拒绝，无法连接。&gt;
+
+e:\python\lib\urllib\request.py:1320: URLError</stack-trace>
+      </failure>
+      <attachments/>
+      <labels>
+        <label name="severity" value="normal"/>
+        <label name="thread" value="13500-MainThread"/>
+        <label name="host" value="DESKTOP-VCQGSEU"/>
+        <label name="framework" value="pytest"/>
+        <label name="language" value="cpython3"/>
+      </labels>
+      <steps>
+        <step start="1541165065594" status="failed" stop="1541165066672">
+          <name>开始执行</name>
+          <title>开始执行</title>
+          <attachments/>
+          <steps/>
+        </step>
+      </steps>
+    </test-case>
+    <test-case start="1541165067406" status="broken" stop="1541165067766">
+      <name>TestLogin.test_login[itheima-123456-itheima-None]</name>
+      <failure>
+        <message>URLError: &lt;urlopen error [WinError 10061] 由于目标计算机积极拒绝，无法连接。&gt;</message>
+        <stack-trace>self = &lt;urllib.request.HTTPHandler object at 0x0000022646ED6F60&gt;, http_class = &lt;class 'http.client.HTTPConnection'&gt;
+req = &lt;selenium.webdriver.remote.remote_connection.Request object at 0x000002264669CD68&gt;, http_conn_args = {}
+host = '127.0.0.1:4723', h = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update(dict((k, v) for k, v in req.headers.items()
+                            if k not in headers))
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = dict((name.title(), val) for name, val in headers.items())
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+                h.request(req.get_method(), req.selector, req.data, headers,
+&gt;                         encode_chunked=req.has_header('Transfer-encoding'))
+
+e:\python\lib\urllib\request.py:1318: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;, method = 'POST', url = '/wd/hub/session'
+body = b'{"desiredCapabilities": {"platformName": "Android", "platformVersion": "5.1", "deviceName": "192.168.56.101:5555", "... "resetKeyboard": true, "appPackage": "com.yunmall.lc", "appActivity": "com.yunmall.ymctoc.ui.activity.MainActivity"}}'
+headers = {'Accept': 'application/json', 'Connection': 'close', 'Content-Length': '291', 'Content-Type': 'application/json;charset=UTF-8', ...}
+
+    def request(self, method, url, body=None, headers={}, *,
+                encode_chunked=False):
+        """Send a complete request to the server."""
+&gt;       self._send_request(method, url, body, headers, encode_chunked)
+
+e:\python\lib\http\client.py:1239: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;, method = 'POST', url = '/wd/hub/session'
+body = b'{"desiredCapabilities": {"platformName": "Android", "platformVersion": "5.1", "deviceName": "192.168.56.101:5555", "... "resetKeyboard": true, "appPackage": "com.yunmall.lc", "appActivity": "com.yunmall.ymctoc.ui.activity.MainActivity"}}'
+headers = {'Accept': 'application/json', 'Connection': 'close', 'Content-Length': '291', 'Content-Type': 'application/json;charset=UTF-8', ...}
+encode_chunked = False
+
+    def _send_request(self, method, url, body, headers, encode_chunked):
+        # Honor explicitly requested Host: and Accept-Encoding: headers.
+        header_names = frozenset(k.lower() for k in headers)
+        skips = {}
+        if 'host' in header_names:
+            skips['skip_host'] = 1
+        if 'accept-encoding' in header_names:
+            skips['skip_accept_encoding'] = 1
+    
+        self.putrequest(method, url, **skips)
+    
+        # chunked encoding will happen if HTTP/1.1 is used and either
+        # the caller passes encode_chunked=True or the following
+        # conditions hold:
+        # 1. content-length has not been explicitly set
+        # 2. the body is a file or iterable, but not a str or bytes-like
+        # 3. Transfer-Encoding has NOT been explicitly set by the caller
+    
+        if 'content-length' not in header_names:
+            # only chunk body if not explicitly set for backwards
+            # compatibility, assuming the client code is already handling the
+            # chunking
+            if 'transfer-encoding' not in header_names:
+                # if content-length cannot be automatically determined, fall
+                # back to chunked encoding
+                encode_chunked = False
+                content_length = self._get_content_length(body, method)
+                if content_length is None:
+                    if body is not None:
+                        if self.debuglevel &gt; 0:
+                            print('Unable to determine size of %r' % body)
+                        encode_chunked = True
+                        self.putheader('Transfer-Encoding', 'chunked')
+                else:
+                    self.putheader('Content-Length', str(content_length))
+        else:
+            encode_chunked = False
+    
+        for hdr, value in headers.items():
+            self.putheader(hdr, value)
+        if isinstance(body, str):
+            # RFC 2616 Section 3.7.1 says that text default has a
+            # default charset of iso-8859-1.
+            body = _encode(body, 'body')
+&gt;       self.endheaders(body, encode_chunked=encode_chunked)
+
+e:\python\lib\http\client.py:1285: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+message_body = b'{"desiredCapabilities": {"platformName": "Android", "platformVersion": "5.1", "deviceName": "192.168.56.101:5555", "... "resetKeyboard": true, "appPackage": "com.yunmall.lc", "appActivity": "com.yunmall.ymctoc.ui.activity.MainActivity"}}'
+
+    def endheaders(self, message_body=None, *, encode_chunked=False):
+        """Indicate that the last header line has been sent to the server.
+    
+        This method sends the request to the server.  The optional message_body
+        argument can be used to pass a message body associated with the
+        request.
+        """
+        if self.__state == _CS_REQ_STARTED:
+            self.__state = _CS_REQ_SENT
+        else:
+            raise CannotSendHeader()
+&gt;       self._send_output(message_body, encode_chunked=encode_chunked)
+
+e:\python\lib\http\client.py:1234: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+message_body = b'{"desiredCapabilities": {"platformName": "Android", "platformVersion": "5.1", "deviceName": "192.168.56.101:5555", "... "resetKeyboard": true, "appPackage": "com.yunmall.lc", "appActivity": "com.yunmall.ymctoc.ui.activity.MainActivity"}}'
+encode_chunked = False
+
+    def _send_output(self, message_body=None, encode_chunked=False):
+        """Send the currently buffered request and clear the buffer.
+    
+        Appends an extra \\r\\n to the buffer.
+        A message_body may be specified, to be appended to the request.
+        """
+        self._buffer.extend((b"", b""))
+        msg = b"\r\n".join(self._buffer)
+        del self._buffer[:]
+&gt;       self.send(msg)
+
+e:\python\lib\http\client.py:1026: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+data = b'POST /wd/hub/session HTTP/1.1\r\nAccept-Encoding: identity\r\nContent-Length: 291\r\nHost: 127.0.0.1:4723\r\nUser-Ag...on-urllib/3.6\r\nAccept: application/json\r\nContent-Type: application/json;charset=UTF-8\r\nConnection: close\r\n\r\n'
+
+    def send(self, data):
+        """Send `data' to the server.
+        ``data`` can be a string object, a bytes object, an array object, a
+        file-like object that supports a .read() method, or an iterable object.
+        """
+    
+        if self.sock is None:
+            if self.auto_open:
+&gt;               self.connect()
+
+e:\python\lib\http\client.py:964: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+
+    def connect(self):
+        """Connect to the host and port specified in __init__."""
+        self.sock = self._create_connection(
+&gt;           (self.host,self.port), self.timeout, self.source_address)
+
+e:\python\lib\http\client.py:936: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+address = ('127.0.0.1', 4723), timeout = &lt;object object at 0x000002264335B540&gt;, source_address = None
+
+    def create_connection(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
+                          source_address=None):
+        """Connect to *address* and return the socket object.
+    
+        Convenience function.  Connect to *address* (a 2-tuple ``(host,
+        port)``) and return the socket object.  Passing the optional
+        *timeout* parameter will set the timeout on the socket instance
+        before attempting to connect.  If no *timeout* is supplied, the
+        global default timeout setting returned by :func:`getdefaulttimeout`
+        is used.  If *source_address* is set it must be a tuple of (host, port)
+        for the socket to bind as a source address before making the connection.
+        A host of '' or port 0 tells the OS to use the default.
+        """
+    
+        host, port = address
+        err = None
+        for res in getaddrinfo(host, port, 0, SOCK_STREAM):
+            af, socktype, proto, canonname, sa = res
+            sock = None
+            try:
+                sock = socket(af, socktype, proto)
+                if timeout is not _GLOBAL_DEFAULT_TIMEOUT:
+                    sock.settimeout(timeout)
+                if source_address:
+                    sock.bind(source_address)
+                sock.connect(sa)
+                # Break explicitly a reference cycle
+                err = None
+                return sock
+    
+            except error as _:
+                err = _
+                if sock is not None:
+                    sock.close()
+    
+        if err is not None:
+&gt;           raise err
+
+e:\python\lib\socket.py:724: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+address = ('127.0.0.1', 4723), timeout = &lt;object object at 0x000002264335B540&gt;, source_address = None
+
+    def create_connection(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
+                          source_address=None):
+        """Connect to *address* and return the socket object.
+    
+        Convenience function.  Connect to *address* (a 2-tuple ``(host,
+        port)``) and return the socket object.  Passing the optional
+        *timeout* parameter will set the timeout on the socket instance
+        before attempting to connect.  If no *timeout* is supplied, the
+        global default timeout setting returned by :func:`getdefaulttimeout`
+        is used.  If *source_address* is set it must be a tuple of (host, port)
+        for the socket to bind as a source address before making the connection.
+        A host of '' or port 0 tells the OS to use the default.
+        """
+    
+        host, port = address
+        err = None
+        for res in getaddrinfo(host, port, 0, SOCK_STREAM):
+            af, socktype, proto, canonname, sa = res
+            sock = None
+            try:
+                sock = socket(af, socktype, proto)
+                if timeout is not _GLOBAL_DEFAULT_TIMEOUT:
+                    sock.settimeout(timeout)
+                if source_address:
+                    sock.bind(source_address)
+&gt;               sock.connect(sa)
+E               ConnectionRefusedError: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+e:\python\lib\socket.py:713: ConnectionRefusedError
+
+During handling of the above exception, another exception occurred:
+
+self = &lt;class 'test_login.TestLogin'&gt;
+
+    @allure.step("开始执行")
+    def setup_class(self):
+        # 实例化 统一入口类
+&gt;       self.page = PageIn()
+
+Scripts\test_login.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+Page\page_in.py:15: in __init__
+    self.driver=get_driver()
+Base\get_driver.py:18: in get_driver
+    return webdriver.Remote('http://127.0.0.1:4723/wd/hub', desired_caps)
+e:\python\lib\site-packages\appium\webdriver\webdriver.py:36: in __init__
+    super(WebDriver, self).__init__(command_executor, desired_capabilities, browser_profile, proxy, keep_alive)
+e:\python\lib\site-packages\selenium\webdriver\remote\webdriver.py:87: in __init__
+    self.start_session(desired_capabilities, browser_profile)
+e:\python\lib\site-packages\selenium\webdriver\remote\webdriver.py:141: in start_session
+    'desiredCapabilities': desired_capabilities,
+e:\python\lib\site-packages\selenium\webdriver\remote\webdriver.py:199: in execute
+    response = self.command_executor.execute(driver_command, params)
+e:\python\lib\site-packages\selenium\webdriver\remote\remote_connection.py:395: in execute
+    return self._request(command_info[0], url, body=data)
+e:\python\lib\site-packages\selenium\webdriver\remote\remote_connection.py:463: in _request
+    resp = opener.open(request, timeout=self._timeout)
+e:\python\lib\urllib\request.py:526: in open
+    response = self._open(req, data)
+e:\python\lib\urllib\request.py:544: in _open
+    '_open', req)
+e:\python\lib\urllib\request.py:504: in _call_chain
+    result = func(*args)
+e:\python\lib\urllib\request.py:1346: in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;urllib.request.HTTPHandler object at 0x0000022646ED6F60&gt;, http_class = &lt;class 'http.client.HTTPConnection'&gt;
+req = &lt;selenium.webdriver.remote.remote_connection.Request object at 0x000002264669CD68&gt;, http_conn_args = {}
+host = '127.0.0.1:4723', h = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update(dict((k, v) for k, v in req.headers.items()
+                            if k not in headers))
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = dict((name.title(), val) for name, val in headers.items())
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+                h.request(req.get_method(), req.selector, req.data, headers,
+                          encode_chunked=req.has_header('Transfer-encoding'))
+            except OSError as err: # timeout error
+&gt;               raise URLError(err)
+E               urllib.error.URLError: &lt;urlopen error [WinError 10061] 由于目标计算机积极拒绝，无法连接。&gt;
+
+e:\python\lib\urllib\request.py:1320: URLError</stack-trace>
+      </failure>
+      <attachments/>
+      <labels>
+        <label name="severity" value="normal"/>
+        <label name="thread" value="13500-MainThread"/>
+        <label name="host" value="DESKTOP-VCQGSEU"/>
+        <label name="framework" value="pytest"/>
+        <label name="language" value="cpython3"/>
+      </labels>
+      <steps/>
+    </test-case>
+    <test-case start="1541165067781" status="broken" stop="1541165068125">
+      <name>TestLogin.test_login[ 18610453007 -123456-itheima-None]</name>
+      <failure>
+        <message>URLError: &lt;urlopen error [WinError 10061] 由于目标计算机积极拒绝，无法连接。&gt;</message>
+        <stack-trace>self = &lt;urllib.request.HTTPHandler object at 0x0000022646ED6F60&gt;, http_class = &lt;class 'http.client.HTTPConnection'&gt;
+req = &lt;selenium.webdriver.remote.remote_connection.Request object at 0x000002264669CD68&gt;, http_conn_args = {}
+host = '127.0.0.1:4723', h = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update(dict((k, v) for k, v in req.headers.items()
+                            if k not in headers))
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = dict((name.title(), val) for name, val in headers.items())
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+                h.request(req.get_method(), req.selector, req.data, headers,
+&gt;                         encode_chunked=req.has_header('Transfer-encoding'))
+
+e:\python\lib\urllib\request.py:1318: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;, method = 'POST', url = '/wd/hub/session'
+body = b'{"desiredCapabilities": {"platformName": "Android", "platformVersion": "5.1", "deviceName": "192.168.56.101:5555", "... "resetKeyboard": true, "appPackage": "com.yunmall.lc", "appActivity": "com.yunmall.ymctoc.ui.activity.MainActivity"}}'
+headers = {'Accept': 'application/json', 'Connection': 'close', 'Content-Length': '291', 'Content-Type': 'application/json;charset=UTF-8', ...}
+
+    def request(self, method, url, body=None, headers={}, *,
+                encode_chunked=False):
+        """Send a complete request to the server."""
+&gt;       self._send_request(method, url, body, headers, encode_chunked)
+
+e:\python\lib\http\client.py:1239: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;, method = 'POST', url = '/wd/hub/session'
+body = b'{"desiredCapabilities": {"platformName": "Android", "platformVersion": "5.1", "deviceName": "192.168.56.101:5555", "... "resetKeyboard": true, "appPackage": "com.yunmall.lc", "appActivity": "com.yunmall.ymctoc.ui.activity.MainActivity"}}'
+headers = {'Accept': 'application/json', 'Connection': 'close', 'Content-Length': '291', 'Content-Type': 'application/json;charset=UTF-8', ...}
+encode_chunked = False
+
+    def _send_request(self, method, url, body, headers, encode_chunked):
+        # Honor explicitly requested Host: and Accept-Encoding: headers.
+        header_names = frozenset(k.lower() for k in headers)
+        skips = {}
+        if 'host' in header_names:
+            skips['skip_host'] = 1
+        if 'accept-encoding' in header_names:
+            skips['skip_accept_encoding'] = 1
+    
+        self.putrequest(method, url, **skips)
+    
+        # chunked encoding will happen if HTTP/1.1 is used and either
+        # the caller passes encode_chunked=True or the following
+        # conditions hold:
+        # 1. content-length has not been explicitly set
+        # 2. the body is a file or iterable, but not a str or bytes-like
+        # 3. Transfer-Encoding has NOT been explicitly set by the caller
+    
+        if 'content-length' not in header_names:
+            # only chunk body if not explicitly set for backwards
+            # compatibility, assuming the client code is already handling the
+            # chunking
+            if 'transfer-encoding' not in header_names:
+                # if content-length cannot be automatically determined, fall
+                # back to chunked encoding
+                encode_chunked = False
+                content_length = self._get_content_length(body, method)
+                if content_length is None:
+                    if body is not None:
+                        if self.debuglevel &gt; 0:
+                            print('Unable to determine size of %r' % body)
+                        encode_chunked = True
+                        self.putheader('Transfer-Encoding', 'chunked')
+                else:
+                    self.putheader('Content-Length', str(content_length))
+        else:
+            encode_chunked = False
+    
+        for hdr, value in headers.items():
+            self.putheader(hdr, value)
+        if isinstance(body, str):
+            # RFC 2616 Section 3.7.1 says that text default has a
+            # default charset of iso-8859-1.
+            body = _encode(body, 'body')
+&gt;       self.endheaders(body, encode_chunked=encode_chunked)
+
+e:\python\lib\http\client.py:1285: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+message_body = b'{"desiredCapabilities": {"platformName": "Android", "platformVersion": "5.1", "deviceName": "192.168.56.101:5555", "... "resetKeyboard": true, "appPackage": "com.yunmall.lc", "appActivity": "com.yunmall.ymctoc.ui.activity.MainActivity"}}'
+
+    def endheaders(self, message_body=None, *, encode_chunked=False):
+        """Indicate that the last header line has been sent to the server.
+    
+        This method sends the request to the server.  The optional message_body
+        argument can be used to pass a message body associated with the
+        request.
+        """
+        if self.__state == _CS_REQ_STARTED:
+            self.__state = _CS_REQ_SENT
+        else:
+            raise CannotSendHeader()
+&gt;       self._send_output(message_body, encode_chunked=encode_chunked)
+
+e:\python\lib\http\client.py:1234: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+message_body = b'{"desiredCapabilities": {"platformName": "Android", "platformVersion": "5.1", "deviceName": "192.168.56.101:5555", "... "resetKeyboard": true, "appPackage": "com.yunmall.lc", "appActivity": "com.yunmall.ymctoc.ui.activity.MainActivity"}}'
+encode_chunked = False
+
+    def _send_output(self, message_body=None, encode_chunked=False):
+        """Send the currently buffered request and clear the buffer.
+    
+        Appends an extra \\r\\n to the buffer.
+        A message_body may be specified, to be appended to the request.
+        """
+        self._buffer.extend((b"", b""))
+        msg = b"\r\n".join(self._buffer)
+        del self._buffer[:]
+&gt;       self.send(msg)
+
+e:\python\lib\http\client.py:1026: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+data = b'POST /wd/hub/session HTTP/1.1\r\nAccept-Encoding: identity\r\nContent-Length: 291\r\nHost: 127.0.0.1:4723\r\nUser-Ag...on-urllib/3.6\r\nAccept: application/json\r\nContent-Type: application/json;charset=UTF-8\r\nConnection: close\r\n\r\n'
+
+    def send(self, data):
+        """Send `data' to the server.
+        ``data`` can be a string object, a bytes object, an array object, a
+        file-like object that supports a .read() method, or an iterable object.
+        """
+    
+        if self.sock is None:
+            if self.auto_open:
+&gt;               self.connect()
+
+e:\python\lib\http\client.py:964: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+
+    def connect(self):
+        """Connect to the host and port specified in __init__."""
+        self.sock = self._create_connection(
+&gt;           (self.host,self.port), self.timeout, self.source_address)
+
+e:\python\lib\http\client.py:936: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+address = ('127.0.0.1', 4723), timeout = &lt;object object at 0x000002264335B540&gt;, source_address = None
+
+    def create_connection(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
+                          source_address=None):
+        """Connect to *address* and return the socket object.
+    
+        Convenience function.  Connect to *address* (a 2-tuple ``(host,
+        port)``) and return the socket object.  Passing the optional
+        *timeout* parameter will set the timeout on the socket instance
+        before attempting to connect.  If no *timeout* is supplied, the
+        global default timeout setting returned by :func:`getdefaulttimeout`
+        is used.  If *source_address* is set it must be a tuple of (host, port)
+        for the socket to bind as a source address before making the connection.
+        A host of '' or port 0 tells the OS to use the default.
+        """
+    
+        host, port = address
+        err = None
+        for res in getaddrinfo(host, port, 0, SOCK_STREAM):
+            af, socktype, proto, canonname, sa = res
+            sock = None
+            try:
+                sock = socket(af, socktype, proto)
+                if timeout is not _GLOBAL_DEFAULT_TIMEOUT:
+                    sock.settimeout(timeout)
+                if source_address:
+                    sock.bind(source_address)
+                sock.connect(sa)
+                # Break explicitly a reference cycle
+                err = None
+                return sock
+    
+            except error as _:
+                err = _
+                if sock is not None:
+                    sock.close()
+    
+        if err is not None:
+&gt;           raise err
+
+e:\python\lib\socket.py:724: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+address = ('127.0.0.1', 4723), timeout = &lt;object object at 0x000002264335B540&gt;, source_address = None
+
+    def create_connection(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
+                          source_address=None):
+        """Connect to *address* and return the socket object.
+    
+        Convenience function.  Connect to *address* (a 2-tuple ``(host,
+        port)``) and return the socket object.  Passing the optional
+        *timeout* parameter will set the timeout on the socket instance
+        before attempting to connect.  If no *timeout* is supplied, the
+        global default timeout setting returned by :func:`getdefaulttimeout`
+        is used.  If *source_address* is set it must be a tuple of (host, port)
+        for the socket to bind as a source address before making the connection.
+        A host of '' or port 0 tells the OS to use the default.
+        """
+    
+        host, port = address
+        err = None
+        for res in getaddrinfo(host, port, 0, SOCK_STREAM):
+            af, socktype, proto, canonname, sa = res
+            sock = None
+            try:
+                sock = socket(af, socktype, proto)
+                if timeout is not _GLOBAL_DEFAULT_TIMEOUT:
+                    sock.settimeout(timeout)
+                if source_address:
+                    sock.bind(source_address)
+&gt;               sock.connect(sa)
+E               ConnectionRefusedError: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+e:\python\lib\socket.py:713: ConnectionRefusedError
+
+During handling of the above exception, another exception occurred:
+
+self = &lt;class 'test_login.TestLogin'&gt;
+
+    @allure.step("开始执行")
+    def setup_class(self):
+        # 实例化 统一入口类
+&gt;       self.page = PageIn()
+
+Scripts\test_login.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+Page\page_in.py:15: in __init__
+    self.driver=get_driver()
+Base\get_driver.py:18: in get_driver
+    return webdriver.Remote('http://127.0.0.1:4723/wd/hub', desired_caps)
+e:\python\lib\site-packages\appium\webdriver\webdriver.py:36: in __init__
+    super(WebDriver, self).__init__(command_executor, desired_capabilities, browser_profile, proxy, keep_alive)
+e:\python\lib\site-packages\selenium\webdriver\remote\webdriver.py:87: in __init__
+    self.start_session(desired_capabilities, browser_profile)
+e:\python\lib\site-packages\selenium\webdriver\remote\webdriver.py:141: in start_session
+    'desiredCapabilities': desired_capabilities,
+e:\python\lib\site-packages\selenium\webdriver\remote\webdriver.py:199: in execute
+    response = self.command_executor.execute(driver_command, params)
+e:\python\lib\site-packages\selenium\webdriver\remote\remote_connection.py:395: in execute
+    return self._request(command_info[0], url, body=data)
+e:\python\lib\site-packages\selenium\webdriver\remote\remote_connection.py:463: in _request
+    resp = opener.open(request, timeout=self._timeout)
+e:\python\lib\urllib\request.py:526: in open
+    response = self._open(req, data)
+e:\python\lib\urllib\request.py:544: in _open
+    '_open', req)
+e:\python\lib\urllib\request.py:504: in _call_chain
+    result = func(*args)
+e:\python\lib\urllib\request.py:1346: in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;urllib.request.HTTPHandler object at 0x0000022646ED6F60&gt;, http_class = &lt;class 'http.client.HTTPConnection'&gt;
+req = &lt;selenium.webdriver.remote.remote_connection.Request object at 0x000002264669CD68&gt;, http_conn_args = {}
+host = '127.0.0.1:4723', h = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update(dict((k, v) for k, v in req.headers.items()
+                            if k not in headers))
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = dict((name.title(), val) for name, val in headers.items())
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+                h.request(req.get_method(), req.selector, req.data, headers,
+                          encode_chunked=req.has_header('Transfer-encoding'))
+            except OSError as err: # timeout error
+&gt;               raise URLError(err)
+E               urllib.error.URLError: &lt;urlopen error [WinError 10061] 由于目标计算机积极拒绝，无法连接。&gt;
+
+e:\python\lib\urllib\request.py:1320: URLError</stack-trace>
+      </failure>
+      <attachments/>
+      <labels>
+        <label name="severity" value="normal"/>
+        <label name="thread" value="13500-MainThread"/>
+        <label name="host" value="DESKTOP-VCQGSEU"/>
+        <label name="framework" value="pytest"/>
+        <label name="language" value="cpython3"/>
+      </labels>
+      <steps/>
+    </test-case>
+    <test-case start="1541165068125" status="broken" stop="1541165068469">
+      <name>TestLogin.test_login[ itheima -123456-itheima1-None]</name>
+      <failure>
+        <message>URLError: &lt;urlopen error [WinError 10061] 由于目标计算机积极拒绝，无法连接。&gt;</message>
+        <stack-trace>self = &lt;urllib.request.HTTPHandler object at 0x0000022646ED6F60&gt;, http_class = &lt;class 'http.client.HTTPConnection'&gt;
+req = &lt;selenium.webdriver.remote.remote_connection.Request object at 0x000002264669CD68&gt;, http_conn_args = {}
+host = '127.0.0.1:4723', h = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update(dict((k, v) for k, v in req.headers.items()
+                            if k not in headers))
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = dict((name.title(), val) for name, val in headers.items())
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+                h.request(req.get_method(), req.selector, req.data, headers,
+&gt;                         encode_chunked=req.has_header('Transfer-encoding'))
+
+e:\python\lib\urllib\request.py:1318: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;, method = 'POST', url = '/wd/hub/session'
+body = b'{"desiredCapabilities": {"platformName": "Android", "platformVersion": "5.1", "deviceName": "192.168.56.101:5555", "... "resetKeyboard": true, "appPackage": "com.yunmall.lc", "appActivity": "com.yunmall.ymctoc.ui.activity.MainActivity"}}'
+headers = {'Accept': 'application/json', 'Connection': 'close', 'Content-Length': '291', 'Content-Type': 'application/json;charset=UTF-8', ...}
+
+    def request(self, method, url, body=None, headers={}, *,
+                encode_chunked=False):
+        """Send a complete request to the server."""
+&gt;       self._send_request(method, url, body, headers, encode_chunked)
+
+e:\python\lib\http\client.py:1239: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;, method = 'POST', url = '/wd/hub/session'
+body = b'{"desiredCapabilities": {"platformName": "Android", "platformVersion": "5.1", "deviceName": "192.168.56.101:5555", "... "resetKeyboard": true, "appPackage": "com.yunmall.lc", "appActivity": "com.yunmall.ymctoc.ui.activity.MainActivity"}}'
+headers = {'Accept': 'application/json', 'Connection': 'close', 'Content-Length': '291', 'Content-Type': 'application/json;charset=UTF-8', ...}
+encode_chunked = False
+
+    def _send_request(self, method, url, body, headers, encode_chunked):
+        # Honor explicitly requested Host: and Accept-Encoding: headers.
+        header_names = frozenset(k.lower() for k in headers)
+        skips = {}
+        if 'host' in header_names:
+            skips['skip_host'] = 1
+        if 'accept-encoding' in header_names:
+            skips['skip_accept_encoding'] = 1
+    
+        self.putrequest(method, url, **skips)
+    
+        # chunked encoding will happen if HTTP/1.1 is used and either
+        # the caller passes encode_chunked=True or the following
+        # conditions hold:
+        # 1. content-length has not been explicitly set
+        # 2. the body is a file or iterable, but not a str or bytes-like
+        # 3. Transfer-Encoding has NOT been explicitly set by the caller
+    
+        if 'content-length' not in header_names:
+            # only chunk body if not explicitly set for backwards
+            # compatibility, assuming the client code is already handling the
+            # chunking
+            if 'transfer-encoding' not in header_names:
+                # if content-length cannot be automatically determined, fall
+                # back to chunked encoding
+                encode_chunked = False
+                content_length = self._get_content_length(body, method)
+                if content_length is None:
+                    if body is not None:
+                        if self.debuglevel &gt; 0:
+                            print('Unable to determine size of %r' % body)
+                        encode_chunked = True
+                        self.putheader('Transfer-Encoding', 'chunked')
+                else:
+                    self.putheader('Content-Length', str(content_length))
+        else:
+            encode_chunked = False
+    
+        for hdr, value in headers.items():
+            self.putheader(hdr, value)
+        if isinstance(body, str):
+            # RFC 2616 Section 3.7.1 says that text default has a
+            # default charset of iso-8859-1.
+            body = _encode(body, 'body')
+&gt;       self.endheaders(body, encode_chunked=encode_chunked)
+
+e:\python\lib\http\client.py:1285: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+message_body = b'{"desiredCapabilities": {"platformName": "Android", "platformVersion": "5.1", "deviceName": "192.168.56.101:5555", "... "resetKeyboard": true, "appPackage": "com.yunmall.lc", "appActivity": "com.yunmall.ymctoc.ui.activity.MainActivity"}}'
+
+    def endheaders(self, message_body=None, *, encode_chunked=False):
+        """Indicate that the last header line has been sent to the server.
+    
+        This method sends the request to the server.  The optional message_body
+        argument can be used to pass a message body associated with the
+        request.
+        """
+        if self.__state == _CS_REQ_STARTED:
+            self.__state = _CS_REQ_SENT
+        else:
+            raise CannotSendHeader()
+&gt;       self._send_output(message_body, encode_chunked=encode_chunked)
+
+e:\python\lib\http\client.py:1234: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+message_body = b'{"desiredCapabilities": {"platformName": "Android", "platformVersion": "5.1", "deviceName": "192.168.56.101:5555", "... "resetKeyboard": true, "appPackage": "com.yunmall.lc", "appActivity": "com.yunmall.ymctoc.ui.activity.MainActivity"}}'
+encode_chunked = False
+
+    def _send_output(self, message_body=None, encode_chunked=False):
+        """Send the currently buffered request and clear the buffer.
+    
+        Appends an extra \\r\\n to the buffer.
+        A message_body may be specified, to be appended to the request.
+        """
+        self._buffer.extend((b"", b""))
+        msg = b"\r\n".join(self._buffer)
+        del self._buffer[:]
+&gt;       self.send(msg)
+
+e:\python\lib\http\client.py:1026: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+data = b'POST /wd/hub/session HTTP/1.1\r\nAccept-Encoding: identity\r\nContent-Length: 291\r\nHost: 127.0.0.1:4723\r\nUser-Ag...on-urllib/3.6\r\nAccept: application/json\r\nContent-Type: application/json;charset=UTF-8\r\nConnection: close\r\n\r\n'
+
+    def send(self, data):
+        """Send `data' to the server.
+        ``data`` can be a string object, a bytes object, an array object, a
+        file-like object that supports a .read() method, or an iterable object.
+        """
+    
+        if self.sock is None:
+            if self.auto_open:
+&gt;               self.connect()
+
+e:\python\lib\http\client.py:964: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+
+    def connect(self):
+        """Connect to the host and port specified in __init__."""
+        self.sock = self._create_connection(
+&gt;           (self.host,self.port), self.timeout, self.source_address)
+
+e:\python\lib\http\client.py:936: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+address = ('127.0.0.1', 4723), timeout = &lt;object object at 0x000002264335B540&gt;, source_address = None
+
+    def create_connection(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
+                          source_address=None):
+        """Connect to *address* and return the socket object.
+    
+        Convenience function.  Connect to *address* (a 2-tuple ``(host,
+        port)``) and return the socket object.  Passing the optional
+        *timeout* parameter will set the timeout on the socket instance
+        before attempting to connect.  If no *timeout* is supplied, the
+        global default timeout setting returned by :func:`getdefaulttimeout`
+        is used.  If *source_address* is set it must be a tuple of (host, port)
+        for the socket to bind as a source address before making the connection.
+        A host of '' or port 0 tells the OS to use the default.
+        """
+    
+        host, port = address
+        err = None
+        for res in getaddrinfo(host, port, 0, SOCK_STREAM):
+            af, socktype, proto, canonname, sa = res
+            sock = None
+            try:
+                sock = socket(af, socktype, proto)
+                if timeout is not _GLOBAL_DEFAULT_TIMEOUT:
+                    sock.settimeout(timeout)
+                if source_address:
+                    sock.bind(source_address)
+                sock.connect(sa)
+                # Break explicitly a reference cycle
+                err = None
+                return sock
+    
+            except error as _:
+                err = _
+                if sock is not None:
+                    sock.close()
+    
+        if err is not None:
+&gt;           raise err
+
+e:\python\lib\socket.py:724: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+address = ('127.0.0.1', 4723), timeout = &lt;object object at 0x000002264335B540&gt;, source_address = None
+
+    def create_connection(address, timeout=_GLOBAL_DEFAULT_TIMEOUT,
+                          source_address=None):
+        """Connect to *address* and return the socket object.
+    
+        Convenience function.  Connect to *address* (a 2-tuple ``(host,
+        port)``) and return the socket object.  Passing the optional
+        *timeout* parameter will set the timeout on the socket instance
+        before attempting to connect.  If no *timeout* is supplied, the
+        global default timeout setting returned by :func:`getdefaulttimeout`
+        is used.  If *source_address* is set it must be a tuple of (host, port)
+        for the socket to bind as a source address before making the connection.
+        A host of '' or port 0 tells the OS to use the default.
+        """
+    
+        host, port = address
+        err = None
+        for res in getaddrinfo(host, port, 0, SOCK_STREAM):
+            af, socktype, proto, canonname, sa = res
+            sock = None
+            try:
+                sock = socket(af, socktype, proto)
+                if timeout is not _GLOBAL_DEFAULT_TIMEOUT:
+                    sock.settimeout(timeout)
+                if source_address:
+                    sock.bind(source_address)
+&gt;               sock.connect(sa)
+E               ConnectionRefusedError: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+e:\python\lib\socket.py:713: ConnectionRefusedError
+
+During handling of the above exception, another exception occurred:
+
+self = &lt;class 'test_login.TestLogin'&gt;
+
+    @allure.step("开始执行")
+    def setup_class(self):
+        # 实例化 统一入口类
+&gt;       self.page = PageIn()
+
+Scripts\test_login.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+Page\page_in.py:15: in __init__
+    self.driver=get_driver()
+Base\get_driver.py:18: in get_driver
+    return webdriver.Remote('http://127.0.0.1:4723/wd/hub', desired_caps)
+e:\python\lib\site-packages\appium\webdriver\webdriver.py:36: in __init__
+    super(WebDriver, self).__init__(command_executor, desired_capabilities, browser_profile, proxy, keep_alive)
+e:\python\lib\site-packages\selenium\webdriver\remote\webdriver.py:87: in __init__
+    self.start_session(desired_capabilities, browser_profile)
+e:\python\lib\site-packages\selenium\webdriver\remote\webdriver.py:141: in start_session
+    'desiredCapabilities': desired_capabilities,
+e:\python\lib\site-packages\selenium\webdriver\remote\webdriver.py:199: in execute
+    response = self.command_executor.execute(driver_command, params)
+e:\python\lib\site-packages\selenium\webdriver\remote\remote_connection.py:395: in execute
+    return self._request(command_info[0], url, body=data)
+e:\python\lib\site-packages\selenium\webdriver\remote\remote_connection.py:463: in _request
+    resp = opener.open(request, timeout=self._timeout)
+e:\python\lib\urllib\request.py:526: in open
+    response = self._open(req, data)
+e:\python\lib\urllib\request.py:544: in _open
+    '_open', req)
+e:\python\lib\urllib\request.py:504: in _call_chain
+    result = func(*args)
+e:\python\lib\urllib\request.py:1346: in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;urllib.request.HTTPHandler object at 0x0000022646ED6F60&gt;, http_class = &lt;class 'http.client.HTTPConnection'&gt;
+req = &lt;selenium.webdriver.remote.remote_connection.Request object at 0x000002264669CD68&gt;, http_conn_args = {}
+host = '127.0.0.1:4723', h = &lt;http.client.HTTPConnection object at 0x0000022646EEE400&gt;
+
+    def do_open(self, http_class, req, **http_conn_args):
+        """Return an HTTPResponse object for the request, using http_class.
+    
+        http_class must implement the HTTPConnection API from http.client.
+        """
+        host = req.host
+        if not host:
+            raise URLError('no host given')
+    
+        # will parse host:port
+        h = http_class(host, timeout=req.timeout, **http_conn_args)
+        h.set_debuglevel(self._debuglevel)
+    
+        headers = dict(req.unredirected_hdrs)
+        headers.update(dict((k, v) for k, v in req.headers.items()
+                            if k not in headers))
+    
+        # TODO(jhylton): Should this be redesigned to handle
+        # persistent connections?
+    
+        # We want to make an HTTP/1.1 request, but the addinfourl
+        # class isn't prepared to deal with a persistent connection.
+        # It will try to read all remaining data from the socket,
+        # which will block while the server waits for the next request.
+        # So make sure the connection gets closed after the (only)
+        # request.
+        headers["Connection"] = "close"
+        headers = dict((name.title(), val) for name, val in headers.items())
+    
+        if req._tunnel_host:
+            tunnel_headers = {}
+            proxy_auth_hdr = "Proxy-Authorization"
+            if proxy_auth_hdr in headers:
+                tunnel_headers[proxy_auth_hdr] = headers[proxy_auth_hdr]
+                # Proxy-Authorization should not be sent to origin
+                # server.
+                del headers[proxy_auth_hdr]
+            h.set_tunnel(req._tunnel_host, headers=tunnel_headers)
+    
+        try:
+            try:
+                h.request(req.get_method(), req.selector, req.data, headers,
+                          encode_chunked=req.has_header('Transfer-encoding'))
+            except OSError as err: # timeout error
+&gt;               raise URLError(err)
+E               urllib.error.URLError: &lt;urlopen error [WinError 10061] 由于目标计算机积极拒绝，无法连接。&gt;
+
+e:\python\lib\urllib\request.py:1320: URLError</stack-trace>
+      </failure>
+      <attachments/>
+      <labels>
+        <label name="severity" value="normal"/>
+        <label name="thread" value="13500-MainThread"/>
+        <label name="host" value="DESKTOP-VCQGSEU"/>
+        <label name="framework" value="pytest"/>
+        <label name="language" value="cpython3"/>
+      </labels>
+      <steps/>
+    </test-case>
+  </test-cases>
+</ns0:test-suite>
